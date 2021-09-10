@@ -9,6 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 
 
+import org.springframework.http.ResponseEntity;
 import pe.com.intercorp.springboottdd.entity.User;
 import pe.com.intercorp.springboottdd.entity.dto.LoginRequest;
 import pe.com.intercorp.springboottdd.entity.dto.LoginResponse;
@@ -39,6 +40,7 @@ public class LoginServiceTest {
         //input
         User user = User.builder().id(1L).username("myusername").password("mypassword").build();
         LoginRequest loginRequest = LoginRequest.builder().username("myusername").password("mypassword").build();
+
 
 
 

@@ -2,15 +2,19 @@ package pe.com.intercorp.springboottdd.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
+import pe.com.intercorp.springboottdd.entity.LoginEnum;
 import pe.com.intercorp.springboottdd.entity.dto.LoginRequest;
 import pe.com.intercorp.springboottdd.entity.dto.LoginResponse;
+import pe.com.intercorp.springboottdd.exception.LoginException;
 import pe.com.intercorp.springboottdd.service.LoginService;
 
 import static org.hamcrest.Matchers.is;
@@ -24,15 +28,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class LoginControllerTest {
 
+
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private LoginService loginService;
 
-
     @Test
-    public void debeRetornarOKSiLasCredencialesSonCorrectas() throws Exception {
+    public void testDebeRetornarOKSiLasCredencialesSonCorrectas() throws Exception {
 
         //******************************************
         //Arrange
@@ -41,6 +45,7 @@ public class LoginControllerTest {
         LoginRequest request = LoginRequest.builder().username("miusername").password("mypassword").build();
         //output
         LoginResponse loginResponse = LoginResponse.builder().codigo(HttpStatus.OK.value()).mensaje("OK").build();
+
 
 
         //******************************************
@@ -63,7 +68,7 @@ public class LoginControllerTest {
 
 
     @Test
-    public void debeRetornar400SiLasCredencialesSonIncorrectas() throws Exception {
+    public void testDebeRetornar400SiLasCredencialesSonIncorrectas() throws Exception {
 
         //******************************************
         //Arrange
@@ -93,7 +98,7 @@ public class LoginControllerTest {
     }
 
     @Test
-    public void debeRetornar401SiElUsuarioNoExiste() throws Exception {
+    public void testDebeRetornar401SiElUsuarioNoExiste() throws Exception {
 
         //******************************************
         //Arrange
@@ -120,6 +125,38 @@ public class LoginControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.mensaje", is("Usuario no existe")));
+
+    }
+
+    @Test
+    public void testDebeRetornar500SiGeneraLoginException() throws Exception {
+
+        //******************************************
+        //Arrange
+        //******************************************
+        //input
+        LoginRequest request = LoginRequest.builder().username("noexisto").password("mypassword").build();
+        //output
+        LoginResponse loginResponse = LoginResponse.builder().codigo(HttpStatus.INTERNAL_SERVER_ERROR.value()).mensaje("Error del servicio").build();
+
+
+        //******************************************
+        //act
+        //******************************************
+        given(loginService.authenticate(Mockito.any()))
+                .willThrow(new LoginException(LoginEnum.ERROR_INTERNAL.getCodigo()));
+
+
+        //******************************************
+        //assert
+        //******************************************
+        mvc.perform(post("/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(request))
+                .accept(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().is5xxServerError());
+                //.andExpect(jsonPath("$.mensaje", is(LoginEnum.ERROR_INTERNAL.getMensaje())));
 
     }
 
